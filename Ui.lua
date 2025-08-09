@@ -190,7 +190,7 @@ function library.new(library_title, cfg_location)
         BackgroundColor3 = Color3.fromRGB(15, 15, 15),
         BorderColor3 = Color3.fromRGB(78, 93, 234),
         Position = UDim2.new(0.5, 0, 0.5, 0),
-        Size = UDim2.new(0, 700, 0, 500),
+        Size = UDim2.new(0, 500, 0, 400), -- Smaller default size for mobile
         Image = "http://www.roblox.com/asset/?id=7300333488",
         AutoButtonColor = false,
         Modal = true,
@@ -217,7 +217,7 @@ function library.new(library_title, cfg_location)
         Name = "TabButtons",
         BackgroundTransparency = 1,
         Position = UDim2.new(0, 12, 0, 41),
-        Size = UDim2.new(0, 76, 0, 447),
+        Size = UDim2.new(0, 76, 0, 347), -- Adjusted for smaller window
     }, MainFrame)
     
     local UIListLayout = library:create("UIListLayout", {
@@ -229,63 +229,81 @@ function library.new(library_title, cfg_location)
         Name = "Tabs",
         BackgroundTransparency = 1,
         Position = UDim2.new(0, 102, 0, 42),
-        Size = UDim2.new(0, 586, 0, 446),
+        Size = UDim2.new(0, 386, 0, 346), -- Adjusted for smaller window
     }, MainFrame)
 
-    -- Size toggle button
-    local SizeButton = library:create("TextButton", {
-        Name = "SizeButton",
-        BackgroundColor3 = Color3.fromRGB(25, 25, 25),
-        BorderColor3 = Color3.fromRGB(0, 0, 0),
-        Position = UDim2.new(1, -30, 1, -30),
+    -- Add resize functionality
+    local ResizeHandle = library:create("Frame", {
+        Name = "ResizeHandle",
+        BackgroundTransparency = 1,
+        Position = UDim2.new(1, -20, 1, -20),
         Size = UDim2.new(0, 20, 0, 20),
-        Font = Enum.Font.Ubuntu,
-        Text = "S",
-        TextColor3 = Color3.fromRGB(150, 150, 150),
-        TextSize = 14,
+        ZIndex = 2,
     }, MainFrame)
 
-    local currentSize = 1
-    local sizes = {
-        {Width = 700, Height = 500},
-        {Width = 800, Height = 600},
-        {Width = 600, Height = 400}
-    }
+    local ResizeIcon = library:create("ImageLabel", {
+        Name = "ResizeIcon",
+        BackgroundTransparency = 1,
+        Size = UDim2.new(1, 0, 1, 0),
+        Image = "rbxassetid://3926305904",
+        ImageColor3 = Color3.fromRGB(150, 150, 150),
+        ImageRectOffset = Vector2.new(284, 4),
+        ImageRectSize = Vector2.new(24, 24),
+        ZIndex = 2,
+    }, ResizeHandle)
 
-    local function updateUISize()
-        local size = sizes[currentSize]
-        MainFrame.Size = UDim2.new(0, size.Width, 0, size.Height)
-        
-        -- Adjust tab buttons and tabs to fit new size
-        TabButtons.Size = UDim2.new(0, 76, 0, size.Height - 41)
-        Tabs.Size = UDim2.new(0, size.Width - 102, 0, size.Height - 42)
-        
-        -- Adjust sections to fit new size
-        for _,tab in pairs(Tabs:GetChildren()) do
-            if tab:IsA("Frame") then
-                tab.TabFrames.Size = UDim2.new(1, 0, 0, size.Height - 71)
-                for _,section in pairs(tab.TabFrames:GetChildren()) do
-                    if section:IsA("Frame") then
-                        section.Left.Size = UDim2.new(0, (size.Width - 102) / 2 - 16, 0, size.Height - 71 - 14)
-                        section.Right.Size = UDim2.new(0, (size.Width - 102) / 2 - 16, 0, size.Height - 71 - 14)
-                        section.Right.Position = UDim2.new(0, (size.Width - 102) / 2 + 8, 0, 14)
+    local resizing = false
+    local startSize
+    local startPos
+
+    ResizeHandle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            resizing = true
+            startSize = MainFrame.Size
+            startPos = input.Position
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    resizing = false
+                end
+            end)
+        end
+    end)
+
+    uis.InputChanged:Connect(function(input)
+        if resizing and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - startPos
+            local newWidth = math.clamp(startSize.Width.Offset + delta.X, 400, 800) -- Min width 400, max 800
+            local newHeight = math.clamp(startSize.Height.Offset + delta.Y, 300, 600) -- Min height 300, max 600
+            
+            MainFrame.Size = UDim2.new(0, newWidth, 0, newHeight)
+            
+            -- Adjust tab buttons and tabs to fit new size
+            TabButtons.Size = UDim2.new(0, 76, 0, newHeight - 41)
+            Tabs.Size = UDim2.new(0, newWidth - 102, 0, newHeight - 42)
+            
+            -- Adjust sections to fit new size
+            for _,tab in pairs(Tabs:GetChildren()) do
+                if tab:IsA("Frame") then
+                    tab.TabFrames.Size = UDim2.new(1, 0, 0, newHeight - 71)
+                    for _,section in pairs(tab.TabFrames:GetChildren()) do
+                        if section:IsA("Frame") then
+                            section.Left.Size = UDim2.new(0, (newWidth - 102) / 2 - 16, 0, newHeight - 71 - 14)
+                            section.Right.Size = UDim2.new(0, (newWidth - 102) / 2 - 16, 0, newHeight - 71 - 14)
+                            section.Right.Position = UDim2.new(0, (newWidth - 102) / 2 + 8, 0, 14)
+                        end
                     end
                 end
             end
         end
-    end
-
-    SizeButton.MouseButton1Click:Connect(function()
-        currentSize = currentSize % #sizes + 1
-        updateUISize()
     end)
 
-    SizeButton.MouseEnter:Connect(function()
-        SizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    ResizeHandle.MouseEnter:Connect(function()
+        ResizeIcon.ImageColor3 = Color3.fromRGB(255, 255, 255)
     end)
     
-    SizeButton.MouseLeave:Connect(function()
-        SizeButton.TextColor3 = Color3.fromRGB(150, 150, 150)
+    ResizeHandle.MouseLeave:Connect(function()
+        ResizeIcon.ImageColor3 = Color3.fromRGB(150, 150, 150)
     end)
 
     local is_first_tab = true
@@ -346,7 +364,7 @@ function library.new(library_title, cfg_location)
             Name = "TabFrames",
             BackgroundTransparency = 1,
             Position = UDim2.new(0, 0, 0, 29),
-            Size = UDim2.new(1, 0, 0, 418),
+            Size = UDim2.new(1, 0, 0, 318), -- Adjusted for smaller window
         }, Tab)
 
         if is_first_tab then
@@ -429,7 +447,7 @@ function library.new(library_title, cfg_location)
                 Name = "Left",
                 BackgroundTransparency = 1,
                 Position = UDim2.new(0, 8, 0, 14),
-                Size = UDim2.new(0, 282, 0, 395),
+                Size = UDim2.new(0, 182, 0, 295), -- Adjusted for smaller window
             }, SectionFrame)
 
             local UIListLayout = library:create("UIListLayout", {
@@ -441,8 +459,8 @@ function library.new(library_title, cfg_location)
             local Right = library:create("Frame", {
                 Name = "Right",
                 BackgroundTransparency = 1,
-                Position = UDim2.new(0, 298, 0, 14),
-                Size = UDim2.new(0, 282, 0, 395),
+                Position = UDim2.new(0, 198, 0, 14), -- Adjusted position
+                Size = UDim2.new(0, 182, 0, 295), -- Adjusted for smaller window
             }, SectionFrame)
 
             local UIListLayout = library:create("UIListLayout", {
