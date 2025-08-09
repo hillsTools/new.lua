@@ -1247,136 +1247,140 @@ function library.new(library_title, cfg_location)
                         
                         element:set_value(value, true)
                     elseif type == "Slider" then
-                        Border.Size = Border.Size + UDim2.new(0, 0, 0, 35)
-                        local min, max = default and default.min or 0, default and default.max or 100
-                        value = {Slider = default and default.default or min}
+    Border.Size = Border.Size + UDim2.new(0, 0, 0, 35)
+    local min, max = default and default.min or 0, default and default.max or 100
+    value = {Slider = default and default.default or min}
 
-                        local Slider = library:create("Frame", {
-                            Name = "Slider",
-                            BackgroundTransparency = 1,
-                            Size = UDim2.new(1, 0, 0, 35),
-                        }, Container)
+    local Slider = library:create("Frame", {
+        Name = "Slider",
+        BackgroundTransparency = 1,
+        Size = UDim2.new(1, 0, 0, 35),
+    }, Container)
 
-                        function element:set_visible(bool)
-                            if bool then
-                                if Slider.Visible then return end
-                                Border.Size = Border.Size + UDim2.new(0, 0, 0, 35)
-                                Slider.Visible = true
-                            else
-                                if not Slider.Visible then return end
-                                Border.Size = Border.Size + UDim2.new(0, 0, 0, -35)
-                                Slider.Visible = false
-                            end
-                        end
+    function element:set_visible(bool)
+        if bool then
+            if Slider.Visible then return end
+            Border.Size = Border.Size + UDim2.new(0, 0, 0, 35)
+            Slider.Visible = true
+        else
+            if not Slider.Visible then return end
+            Border.Size = Border.Size + UDim2.new(0, 0, 0, -35)
+            Slider.Visible = false
+        end
+    end
 
-                        local SliderText = library:create("TextLabel", {
-                            Name = "SliderText",
-                            BackgroundTransparency = 1,
-                            Position = UDim2.new(0, 9, 0, 6),
-                            Size = UDim2.new(0, 200, 0, 9),
-                            Font = Enum.Font.Ubuntu,
-                            Text = text,
-                            TextColor3 = Color3.fromRGB(150, 150, 150),
-                            TextSize = 14,
-                            TextXAlignment = Enum.TextXAlignment.Left,
-                        }, Slider)
+    local SliderText = library:create("TextLabel", {
+        Name = "SliderText",
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0, 9, 0, 6),
+        Size = UDim2.new(0, 200, 0, 9),
+        Font = Enum.Font.Ubuntu,
+        Text = text,
+        TextColor3 = Color3.fromRGB(150, 150, 150),
+        TextSize = 14,
+        TextXAlignment = Enum.TextXAlignment.Left,
+    }, Slider)
 
-                        local SliderButton = library:create("TextButton", {
-                            Name = "SliderButton",
-                            BackgroundColor3 = Color3.fromRGB(25, 25, 25),
-                            BorderColor3 = Color3.fromRGB(0, 0, 0),
-                            Position = UDim2.new(0, 9, 0, 20),
-                            Size = UDim2.new(0, 260, 0, 10),
-                            AutoButtonColor = false,
-                            Text = "",
-                        }, Slider)
+    local SliderButton = library:create("TextButton", {
+        Name = "SliderButton",
+        BackgroundColor3 = Color3.fromRGB(25, 25, 25),
+        BorderColor3 = Color3.fromRGB(0, 0, 0),
+        Position = UDim2.new(0, 9, 0, 20),
+        Size = UDim2.new(0, 260, 0, 10),
+        AutoButtonColor = false,
+        Text = "",
+        Active = false, -- Disable touch events on the button itself
+    }, Slider)
 
-                        local SliderFrame = library:create("Frame", {
-                            Name = "SliderFrame",
-                            BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-                            BorderSizePixel = 0,
-                            Size = UDim2.new((value.Slider - min) / (max - min), 0, 1, 0),
-                        }, SliderButton)
+    local SliderFrame = library:create("Frame", {
+        Name = "SliderFrame",
+        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+        BorderSizePixel = 0,
+        Size = UDim2.new((value.Slider - min) / (max - min), 0, 1, 0),
+    }, SliderButton)
 
-                        local UIGradient = library:create("UIGradient", {
-                            Color = ColorSequence.new{
-                                ColorSequenceKeypoint.new(0, Color3.fromRGB(79, 95, 239)),
-                                ColorSequenceKeypoint.new(1, Color3.fromRGB(56, 67, 163))
-                            },
-                            Rotation = 90,
-                        }, SliderFrame)
+    local UIGradient = library:create("UIGradient", {
+        Color = ColorSequence.new{
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(79, 95, 239)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(56, 67, 163))
+        },
+        Rotation = 90,
+    }, SliderFrame)
 
-                        local SliderValue = library:create("TextLabel", {
-                            Name = "SliderValue",
-                            BackgroundTransparency = 1,
-                            Position = UDim2.new(0, 69, 0, 6),
-                            Size = UDim2.new(0, 200, 0, 9),
-                            Font = Enum.Font.Ubuntu,
-                            Text = value.Slider,
-                            TextColor3 = Color3.fromRGB(150, 150, 150),
-                            TextSize = 14,
-                            TextXAlignment = Enum.TextXAlignment.Right,
-                        }, Slider)
+    local SliderValue = library:create("TextLabel", {
+        Name = "SliderValue",
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0, 69, 0, 6),
+        Size = UDim2.new(0, 200, 0, 9),
+        Font = Enum.Font.Ubuntu,
+        Text = value.Slider,
+        TextColor3 = Color3.fromRGB(150, 150, 150),
+        TextSize = 14,
+        TextXAlignment = Enum.TextXAlignment.Right,
+    }, Slider)
 
-                        local is_sliding = false
-                        local mouse_in = false
-                        
-                        Slider.MouseEnter:Connect(function()
-                            mouse_in = true
-                            SliderText.TextColor3 = Color3.fromRGB(255, 255, 255)
-                            SliderValue.TextColor3 = Color3.fromRGB(255, 255, 255)
-                        end)
-                        
-                        Slider.MouseLeave:Connect(function()
-                            mouse_in = false
-                            if not is_sliding then
-                                SliderText.TextColor3 = Color3.fromRGB(150, 150, 150)
-                                SliderValue.TextColor3 = Color3.fromRGB(150, 150, 150)
-                            end
-                        end)
-                        
-                        SliderButton.MouseButton1Down:Connect(function()
-                            is_sliding = true
-                            local function update()
-                                local x = math.clamp(mouse.X - SliderButton.AbsolutePosition.X, 0, 260)
-                                SliderFrame.Size = UDim2.new(x/260, 0, 1, 0)
-                                local val = math.floor(((max - min) / 260 * x) + min)
-                                if val ~= value.Slider then
-                                    SliderValue.Text = val
-                                    value.Slider = val
-                                    do_callback()
-                                end
-                            end
-                            
-                            update()
-                            local moveconnection = mouse.Move:Connect(update)
-                            local releaseconnection = uis.InputEnded:Connect(function(Mouse)
-                                if Mouse.UserInputType == Enum.UserInputType.MouseButton1 then
-                                    is_sliding = false
-                                    if not mouse_in then
-                                        SliderText.TextColor3 = Color3.fromRGB(150, 150, 150)
-                                        SliderValue.TextColor3 = Color3.fromRGB(150, 150, 150)
-                                    end
-                                    moveconnection:Disconnect()
-                                    releaseconnection:Disconnect()
-                                end
-                            end)
-                        end)
+    local is_sliding = false
+    local mouse_in = false
+    
+    Slider.MouseEnter:Connect(function()
+        mouse_in = true
+        SliderText.TextColor3 = Color3.fromRGB(255, 255, 255)
+        SliderValue.TextColor3 = Color3.fromRGB(255, 255, 255)
+    end)
+    
+    Slider.MouseLeave:Connect(function()
+        mouse_in = false
+        if not is_sliding then
+            SliderText.TextColor3 = Color3.fromRGB(150, 150, 150)
+            SliderValue.TextColor3 = Color3.fromRGB(150, 150, 150)
+        end
+    end)
+    
+    -- Only allow mouse input (not touch) for the slider
+    SliderButton.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            is_sliding = true
+            local function update()
+                local x = math.clamp(mouse.X - SliderButton.AbsolutePosition.X, 0, 260)
+                SliderFrame.Size = UDim2.new(x/260, 0, 1, 0)
+                local val = math.floor(((max - min) / 260 * x) + min)
+                if val ~= value.Slider then
+                    SliderValue.Text = val
+                    value.Slider = val
+                    do_callback()
+                end
+            end
+            
+            update()
+            local moveconnection = mouse.Move:Connect(update)
+            local releaseconnection = uis.InputEnded:Connect(function(Mouse)
+                if Mouse.UserInputType == Enum.UserInputType.MouseButton1 then
+                    is_sliding = false
+                    if not mouse_in then
+                        SliderText.TextColor3 = Color3.fromRGB(150, 150, 150)
+                        SliderValue.TextColor3 = Color3.fromRGB(150, 150, 150)
+                    end
+                    moveconnection:Disconnect()
+                    releaseconnection:Disconnect()
+                end
+            end)
+        end
+    end)
 
-                        function element:set_value(new_value, cb)
-                            value = new_value and new_value or value
-                            menu.values[tab.tab_num][section_name][sector_name][flag] = value
-                            
-                            local new_size = (value.Slider - min) / (max - min)
-                            SliderFrame.Size = UDim2.new(new_size, 0, 1, 0)
-                            SliderValue.Text = value.Slider
-                            
-                            if cb == nil or not cb then
-                                do_callback()
-                            end
-                        end
-                        
-                        element:set_value(value, true)
+    function element:set_value(new_value, cb)
+        value = new_value and new_value or value
+        menu.values[tab.tab_num][section_name][sector_name][flag] = value
+        
+        local new_size = (value.Slider - min) / (max - min)
+        SliderFrame.Size = UDim2.new(new_size, 0, 1, 0)
+        SliderValue.Text = value.Slider
+        
+        if cb == nil or not cb then
+            do_callback()
+        end
+    end
+    
+    element:set_value(value, true)
                     elseif type == "Button" then
                         Border.Size = Border.Size + UDim2.new(0, 0, 0, 30)
 
