@@ -5,6 +5,10 @@ function library:tween(...) TweenService:Create(...):Play() end
 
 local uis = game:GetService("UserInputService")
 local runService = game:GetService("RunService")
+local http = game:GetService("HttpService")
+local text_service = game:GetService("TextService")
+local local_player = game:GetService("Players").LocalPlayer
+local mouse = local_player:GetMouse()
 
 function library:create(Object, Properties, Parent)
     local Obj = Instance.new(Object)
@@ -15,16 +19,38 @@ function library:create(Object, Properties, Parent)
     return Obj
 end
 
-local text_service = game:GetService("TextService")
 function library:get_text_size(...)
     return text_service:GetTextSize(...)
 end
 
-library.signal = loadstring(game:HttpGet("https://raw.githubusercontent.com/Quenty/NevermoreEngine/version2/Modules/Shared/Events/Signal.lua"))()
+-- Signal implementation (simplified)
+library.signal = {}
+library.signal.__index = library.signal
 
-local local_player = game:GetService("Players").LocalPlayer
-local mouse = local_player:GetMouse()
-local http = game:GetService("HttpService")
+function library.signal.new()
+    local self = setmetatable({_bindings = {}}, library.signal)
+    return self
+end
+
+function library.signal:Connect(func)
+    table.insert(self._bindings, func)
+    return {
+        Disconnect = function()
+            for i,v in pairs(self._bindings) do
+                if v == func then
+                    table.remove(self._bindings, i)
+                    break
+                end
+            end
+        end
+    }
+end
+
+function library.signal:Fire(...)
+    for _,func in pairs(self._bindings) do
+        func(...)
+    end
+end
 
 function library:set_draggable(gui, dragPart)
     local dragging, dragInput, dragStart, startPos
@@ -65,7 +91,7 @@ end
 function library.new(library_title, cfg_location)
     local menu = {}
     menu.values = {}
-    menu.on_load_cfg = library.signal.new("on_load_cfg")
+    menu.on_load_cfg = library.signal.new()
     
     if not isfolder(cfg_location) then makefolder(cfg_location) end
     
@@ -226,9 +252,32 @@ function library.new(library_title, cfg_location)
         {Width = 600, Height = 400}
     }
 
+    local function updateUISize()
+        local size = sizes[currentSize]
+        MainFrame.Size = UDim2.new(0, size.Width, 0, size.Height)
+        
+        -- Adjust tab buttons and tabs to fit new size
+        TabButtons.Size = UDim2.new(0, 76, 0, size.Height - 41)
+        Tabs.Size = UDim2.new(0, size.Width - 102, 0, size.Height - 42)
+        
+        -- Adjust sections to fit new size
+        for _,tab in pairs(Tabs:GetChildren()) do
+            if tab:IsA("Frame") then
+                tab.TabFrames.Size = UDim2.new(1, 0, 0, size.Height - 71)
+                for _,section in pairs(tab.TabFrames:GetChildren()) do
+                    if section:IsA("Frame") then
+                        section.Left.Size = UDim2.new(0, (size.Width - 102) / 2 - 16, 0, size.Height - 71 - 14)
+                        section.Right.Size = UDim2.new(0, (size.Width - 102) / 2 - 16, 0, size.Height - 71 - 14)
+                        section.Right.Position = UDim2.new(0, (size.Width - 102) / 2 + 8, 0, 14)
+                    end
+                end
+            end
+        end
+    end
+
     SizeButton.MouseButton1Click:Connect(function()
         currentSize = currentSize % #sizes + 1
-        MainFrame.Size = UDim2.new(0, sizes[currentSize].Width, 0, sizes[currentSize].Height)
+        updateUISize()
     end)
 
     SizeButton.MouseEnter:Connect(function()
@@ -250,7 +299,7 @@ function library.new(library_title, cfg_location)
 
         local TabButton = library:create("TextButton", {
             BackgroundTransparency = 1,
-            Size = UDim2.new(0, 76, 0, 60), -- Smaller tab buttons
+            Size = UDim2.new(0, 76, 0, 60),
             Text = "",
         }, TabButtons)
 
@@ -258,7 +307,7 @@ function library.new(library_title, cfg_location)
             AnchorPoint = Vector2.new(0.5, 0.5),
             BackgroundTransparency = 1,
             Position = UDim2.new(0.5, 0, 0.3, 0),
-            Size = UDim2.new(0, 24, 0, 24), -- Smaller icon
+            Size = UDim2.new(0, 24, 0, 24),
             Image = tab_icon,
             ImageColor3 = Color3.fromRGB(100, 100, 100),
         }, TabButton)
@@ -267,11 +316,11 @@ function library.new(library_title, cfg_location)
             AnchorPoint = Vector2.new(0.5, 0.5),
             BackgroundTransparency = 1,
             Position = UDim2.new(0.5, 0, 0.7, 0),
-            Size = UDim2.new(0.8, 0, 0, 15), -- Smaller text
+            Size = UDim2.new(0.8, 0, 0, 15),
             Font = Enum.Font.Ubuntu,
             Text = tab_name,
             TextColor3 = Color3.fromRGB(100, 100, 100),
-            TextSize = 12, -- Smaller font size
+            TextSize = 12,
         }, TabButton)
 
         local Tab = library:create("Frame", {
@@ -345,9 +394,9 @@ function library.new(library_title, cfg_location)
 
             local SectionButton = library:create("TextButton", {
                 Name = "SectionButton",
-                BackgroundColor3 = Color3.fromRGB(15, 15, 15), -- Box background
-                BorderColor3 = Color3.fromRGB(30, 30, 30), -- Box border
-                Size = UDim2.new(1/num_sections, -4, 1, 0), -- Fit in box with padding
+                BackgroundColor3 = Color3.fromRGB(15, 15, 15),
+                BorderColor3 = Color3.fromRGB(30, 30, 30),
+                Size = UDim2.new(1/num_sections, -4, 1, 0),
                 Font = Enum.Font.Ubuntu,
                 Text = section_name,
                 TextColor3 = Color3.fromRGB(100, 100, 100),
