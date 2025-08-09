@@ -761,3 +761,54 @@ function library:CreateWindow(title)
 end
 
 return library
+
+local Library = require(script.Parent.Library) -- Adjust path to where you put the module
+
+-- Create a window
+local window = Library:CreateWindow("My Cool UI")
+
+-- Set bottom labels
+window:SetLeftLabel("Version 1.0")
+window:SetRightLabel("Made by You")
+
+-- Create tabs
+local mainTab = window:CreateTab("Main")
+local settingsTab = window:CreateTab("Settings")
+
+-- Main Tab Sections
+local playerSection = mainTab:CreateSection("Player")
+local gameSection = mainTab:CreateSection("Game")
+
+-- Player Section Elements
+playerSection:CreateButton("Reset Character", function()
+    game:GetService("Players").LocalPlayer.Character:BreakJoints()
+end)
+
+local walkSpeedToggle = playerSection:CreateToggle("Speed Boost", false, function(state)
+    if state then
+        game:GetService("Players").LocalPlayer.Character.Humanoid.WalkSpeed = 32
+    else
+        game:GetService("Players").LocalPlayer.Character.Humanoid.WalkSpeed = 16
+    end
+end)
+
+local jumpSlider = playerSection:CreateSlider("Jump Power", 50, 200, 100, function(value)
+    game:GetService("Players").LocalPlayer.Character.Humanoid.JumpPower = value
+end)
+
+-- Game Section Elements
+local timeDropdown = gameSection:CreateDropdown("Time of Day", {"Morning", "Noon", "Evening", "Night"}, "Noon", function(option)
+    if option == "Morning" then
+        game:GetService("Lighting").ClockTime = 6
+    elseif option == "Noon" then
+        game:GetService("Lighting").ClockTime = 12
+    elseif option == "Evening" then
+        game:GetService("Lighting").ClockTime = 18
+    elseif option == "Night" then
+        game:GetService("Lighting").ClockTime = 0
+    end
+end)
+
+-- Settings Tab
+local uiSettings = settingsTab:CreateSection("UI Settings")
+uiSettings:CreateLabel("Coming soon!")
