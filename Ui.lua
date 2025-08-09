@@ -1289,6 +1289,7 @@ function library.new(library_title, cfg_location)
         Size = UDim2.new(0, 260, 0, 10),
         AutoButtonColor = false,
         Text = "",
+        Active = true, -- Enable touch events
     }, Slider)
 
     local SliderFrame = library:create("Frame", {
@@ -1320,8 +1321,6 @@ function library.new(library_title, cfg_location)
 
     local is_sliding = false
     local mouse_in = false
-    local touch_start_pos = nil
-    local touch_start_time = 0
     
     Slider.MouseEnter:Connect(function()
         mouse_in = true
@@ -1337,16 +1336,18 @@ function library.new(library_title, cfg_location)
         end
     end)
     
-    -- Mobile touch handling
+    -- Simple touch/mouse handling that works for both
     SliderButton.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.Touch then
-            touch_start_pos = input.Position
-            touch_start_time = tick()
-            is_sliding = true
-        elseif input.UserInputType == Enum.UserInputType.MouseButton1 then
+        if input.UserInputType == Enum.UserInputType.Touch or 
+           input.UserInputType == Enum.UserInputType.MouseButton1 then
             is_sliding = true
             local function update()
-                local x = math.clamp(mouse.X - SliderButton.AbsolutePosition.X, 0, 260)
+                local x
+                if input.UserInputType == Enum.UserInputType.Touch then
+                    x = math.clamp(input.Position.X - SliderButton.AbsolutePosition.X, 0, 260)
+                else
+                    x = math.clamp(mouse.X - SliderButton.AbsolutePosition.X, 0, 260)
+                end
                 SliderFrame.Size = UDim2.new(x/260, 0, 1, 0)
                 local val = math.floor(((max - min) / 260 * x) + min)
                 if val ~= value.Slider then
@@ -1357,9 +1358,21 @@ function library.new(library_title, cfg_location)
             end
             
             update()
-            local moveconnection = mouse.Move:Connect(update)
-            local releaseconnection = uis.InputEnded:Connect(function(Mouse)
-                if Mouse.UserInputType == Enum.UserInputType.MouseButton1 then
+            
+            local moveconnection
+            if input.UserInputType == Enum.UserInputType.Touch then
+                moveconnection = input.Changed:Connect(function()
+                    if input.UserInputState == Enum.UserInputState.Change then
+                        update()
+                    end
+                end)
+            else
+                moveconnection = mouse.Move:Connect(update)
+            end
+            
+            local releaseconnection = uis.InputEnded:Connect(function(endInput)
+                if (endInput.UserInputType == Enum.UserInputType.Touch and input.UserInputType == Enum.UserInputType.Touch) or
+                   (endInput.UserInputType == Enum.UserInputType.MouseButton1 and input.UserInputType == Enum.UserInputType.MouseButton1) then
                     is_sliding = false
                     if not mouse_in then
                         SliderText.TextColor3 = Color3.fromRGB(150, 150, 150)
@@ -1369,45 +1382,6 @@ function library.new(library_title, cfg_location)
                     releaseconnection:Disconnect()
                 end
             end)
-        end
-    end)
-    
-    SliderButton.InputChanged:Connect(function(input)
-        if is_sliding and input.UserInputType == Enum.UserInputType.Touch then
-            -- Check if this is a deliberate slide (not character movement)
-            if touch_start_pos and (input.Position - touch_start_pos).Magnitude > 5 then
-                local x = math.clamp(input.Position.X - SliderButton.AbsolutePosition.X, 0, 260)
-                SliderFrame.Size = UDim2.new(x/260, 0, 1, 0)
-                local val = math.floor(((max - min) / 260 * x) + min)
-                if val ~= value.Slider then
-                    SliderValue.Text = val
-                    value.Slider = val
-                    do_callback()
-                end
-            end
-        end
-    end)
-    
-    SliderButton.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.Touch then
-            -- Check if this was a tap (not a slide)
-            if touch_start_pos and (input.Position - touch_start_pos).Magnitude <= 5 and (tick() - touch_start_time) < 0.3 then
-                -- Treat as tap to set position
-                local x = math.clamp(input.Position.X - SliderButton.AbsolutePosition.X, 0, 260)
-                SliderFrame.Size = UDim2.new(x/260, 0, 1, 0)
-                local val = math.floor(((max - min) / 260 * x) + min)
-                if val ~= value.Slider then
-                    SliderValue.Text = val
-                    value.Slider = val
-                    do_callback()
-                end
-            end
-            is_sliding = false
-            touch_start_pos = nil
-            if not mouse_in then
-                SliderText.TextColor3 = Color3.fromRGB(150, 150, 150)
-                SliderValue.TextColor3 = Color3.fromRGB(150, 150, 150)
-            end
         end
     end)
 
