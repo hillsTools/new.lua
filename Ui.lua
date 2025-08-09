@@ -502,16 +502,11 @@ function library.new(library_title, cfg_location)
                     local default = data.default
                     local element = {}
 
+                    function element:get_value() return value end
                     function element:set_value(new_value, cb)
                         value = new_value or value
                         menu.values[tab.tab_num][section_name][sector_name][flag] = value
-                        if cb == nil or not cb then
-                            do_callback()
-                        end
-                    end
-
-                    function element:get_value()
-                        return value
+                        if cb == nil or not cb then do_callback() end
                     end
 
                     if type == "Toggle" then
@@ -1030,7 +1025,8 @@ function library.new(library_title, cfg_location)
                                 end)
                             end)
 
-                            function color:set_value(new_value, cb)
+                            local color_obj = {}
+                            function color_obj:set_value(new_value, cb)
                                 extra_value = new_value and new_value or extra_value
                                 menu.values[tab.tab_num][section_name][sector_name][extra_flag] = extra_value
                                 
@@ -1055,12 +1051,12 @@ function library.new(library_title, cfg_location)
                                 end
                             end
                             
-                            color:set_value(color_default and color_default, true)
+                            color_obj:set_value(color_default and color_default, true)
                             menu.on_load_cfg:Connect(function()
-                                color:set_value(menu.values[tab.tab_num][section_name][sector_name][extra_flag])
+                                color_obj:set_value(menu.values[tab.tab_num][section_name][sector_name][extra_flag])
                             end)
                             
-                            return color
+                            return color_obj
                         end
                     elseif type == "Dropdown" then
                         Border.Size = Border.Size + UDim2.new(0, 0, 0, 45)
