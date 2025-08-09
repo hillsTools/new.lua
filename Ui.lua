@@ -9,9 +9,7 @@ local runService = game:GetService("RunService")
 function library:create(Object, Properties, Parent)
     local Obj = Instance.new(Object)
     for i,v in pairs(Properties) do
-        if i ~= "Parent" then -- Skip Parent property during initial assignment
-            Obj[i] = v
-        end
+        Obj[i] = v
     end
     if Parent then Obj.Parent = Parent end
     return Obj
@@ -160,17 +158,13 @@ function library.new(library_title, cfg_location)
     -- Make watermark draggable
     library:set_draggable(Watermark)
 
-    -- Adjust main frame size for mobile
-    local isMobile = uis.TouchEnabled and not uis.MouseEnabled
-    local mainFrameSize = isMobile and UDim2.new(0.9, 0, 0.8, 0) or UDim2.new(0, 700, 0, 500)
-    
     local MainFrame = library:create("ImageButton", {
         Name = "Main",
         AnchorPoint = Vector2.new(0.5, 0.5),
         BackgroundColor3 = Color3.fromRGB(15, 15, 15),
         BorderColor3 = Color3.fromRGB(78, 93, 234),
         Position = UDim2.new(0.5, 0, 0.5, 0),
-        Size = mainFrameSize,
+        Size = UDim2.new(0, 700, 0, 500),
         Image = "http://www.roblox.com/asset/?id=7300333488",
         AutoButtonColor = false,
         Modal = true,
@@ -197,7 +191,7 @@ function library.new(library_title, cfg_location)
         Name = "TabButtons",
         BackgroundTransparency = 1,
         Position = UDim2.new(0, 12, 0, 41),
-        Size = UDim2.new(0, isMobile and 60 or 76, 0, isMobile and MainFrame.Size.Y.Offset - 50 or 447),
+        Size = UDim2.new(0, 76, 0, 447),
     }, MainFrame)
     
     local UIListLayout = library:create("UIListLayout", {
@@ -208,34 +202,42 @@ function library.new(library_title, cfg_location)
     local Tabs = library:create("Frame", {
         Name = "Tabs",
         BackgroundTransparency = 1,
-        Position = UDim2.new(0, isMobile and 80 or 102, 0, 42),
-        Size = UDim2.new(0, isMobile and MainFrame.Size.X.Offset - 90 or 586, 0, isMobile and MainFrame.Size.Y.Offset - 50 or 446),
+        Position = UDim2.new(0, 102, 0, 42),
+        Size = UDim2.new(0, 586, 0, 446),
     }, MainFrame)
 
-    -- Bottom corner labels
-    local BottomLeftLabel = library:create("TextLabel", {
-        Name = "BottomLeftLabel",
-        BackgroundTransparency = 1,
-        Position = UDim2.new(0, 10, 1, -20),
-        Size = UDim2.new(0, 200, 0, 20),
+    -- Size toggle button
+    local SizeButton = library:create("TextButton", {
+        Name = "SizeButton",
+        BackgroundColor3 = Color3.fromRGB(25, 25, 25),
+        BorderColor3 = Color3.fromRGB(0, 0, 0),
+        Position = UDim2.new(1, -30, 1, -30),
+        Size = UDim2.new(0, 20, 0, 20),
         Font = Enum.Font.Ubuntu,
-        Text = "Left Label",
+        Text = "S",
         TextColor3 = Color3.fromRGB(150, 150, 150),
-        TextSize = 12,
-        TextXAlignment = Enum.TextXAlignment.Left,
+        TextSize = 14,
     }, MainFrame)
 
-    local BottomRightLabel = library:create("TextLabel", {
-        Name = "BottomRightLabel",
-        BackgroundTransparency = 1,
-        Position = UDim2.new(1, -210, 1, -20),
-        Size = UDim2.new(0, 200, 0, 20),
-        Font = Enum.Font.Ubuntu,
-        Text = "Right Label",
-        TextColor3 = Color3.fromRGB(150, 150, 150),
-        TextSize = 12,
-        TextXAlignment = Enum.TextXAlignment.Right,
-    }, MainFrame)
+    local currentSize = 1
+    local sizes = {
+        {Width = 700, Height = 500},
+        {Width = 800, Height = 600},
+        {Width = 600, Height = 400}
+    }
+
+    SizeButton.MouseButton1Click:Connect(function()
+        currentSize = currentSize % #sizes + 1
+        MainFrame.Size = UDim2.new(0, sizes[currentSize].Width, 0, sizes[currentSize].Height)
+    end)
+
+    SizeButton.MouseEnter:Connect(function()
+        SizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    end)
+    
+    SizeButton.MouseLeave:Connect(function()
+        SizeButton.TextColor3 = Color3.fromRGB(150, 150, 150)
+    end)
 
     local is_first_tab = true
     local selected_tab
@@ -248,7 +250,7 @@ function library.new(library_title, cfg_location)
 
         local TabButton = library:create("TextButton", {
             BackgroundTransparency = 1,
-            Size = UDim2.new(0, isMobile and 60 or 76, 0, isMobile and 50 or 60),
+            Size = UDim2.new(0, 76, 0, 60), -- Smaller tab buttons
             Text = "",
         }, TabButtons)
 
@@ -256,7 +258,7 @@ function library.new(library_title, cfg_location)
             AnchorPoint = Vector2.new(0.5, 0.5),
             BackgroundTransparency = 1,
             Position = UDim2.new(0.5, 0, 0.3, 0),
-            Size = UDim2.new(0, isMobile and 20 or 24, 0, isMobile and 20 or 24),
+            Size = UDim2.new(0, 24, 0, 24), -- Smaller icon
             Image = tab_icon,
             ImageColor3 = Color3.fromRGB(100, 100, 100),
         }, TabButton)
@@ -265,11 +267,11 @@ function library.new(library_title, cfg_location)
             AnchorPoint = Vector2.new(0.5, 0.5),
             BackgroundTransparency = 1,
             Position = UDim2.new(0.5, 0, 0.7, 0),
-            Size = UDim2.new(0.8, 0, 0, isMobile and 12 or 15),
+            Size = UDim2.new(0.8, 0, 0, 15), -- Smaller text
             Font = Enum.Font.Ubuntu,
             Text = tab_name,
             TextColor3 = Color3.fromRGB(100, 100, 100),
-            TextSize = isMobile and 10 or 12,
+            TextSize = 12, -- Smaller font size
         }, TabButton)
 
         local Tab = library:create("Frame", {
@@ -295,7 +297,7 @@ function library.new(library_title, cfg_location)
             Name = "TabFrames",
             BackgroundTransparency = 1,
             Position = UDim2.new(0, 0, 0, 29),
-            Size = UDim2.new(1, 0, 0, isMobile and MainFrame.Size.Y.Offset - 80 or 418),
+            Size = UDim2.new(1, 0, 0, 418),
         }, Tab)
 
         if is_first_tab then
@@ -343,9 +345,9 @@ function library.new(library_title, cfg_location)
 
             local SectionButton = library:create("TextButton", {
                 Name = "SectionButton",
-                BackgroundColor3 = Color3.fromRGB(15, 15, 15),
-                BorderColor3 = Color3.fromRGB(30, 30, 30),
-                Size = UDim2.new(1/num_sections, -4, 1, 0),
+                BackgroundColor3 = Color3.fromRGB(15, 15, 15), -- Box background
+                BorderColor3 = Color3.fromRGB(30, 30, 30), -- Box border
+                Size = UDim2.new(1/num_sections, -4, 1, 0), -- Fit in box with padding
                 Font = Enum.Font.Ubuntu,
                 Text = section_name,
                 TextColor3 = Color3.fromRGB(100, 100, 100),
@@ -378,7 +380,7 @@ function library.new(library_title, cfg_location)
                 Name = "Left",
                 BackgroundTransparency = 1,
                 Position = UDim2.new(0, 8, 0, 14),
-                Size = UDim2.new(0, isMobile and (TabFrames.Size.X.Offset/2 - 12) or 282, 0, TabFrames.Size.Y.Offset - 14),
+                Size = UDim2.new(0, 282, 0, 395),
             }, SectionFrame)
 
             local UIListLayout = library:create("UIListLayout", {
@@ -390,8 +392,8 @@ function library.new(library_title, cfg_location)
             local Right = library:create("Frame", {
                 Name = "Right",
                 BackgroundTransparency = 1,
-                Position = UDim2.new(0, isMobile and (TabFrames.Size.X.Offset/2 + 4) or 298, 0, 14),
-                Size = UDim2.new(0, isMobile and (TabFrames.Size.X.Offset/2 - 12) or 282, 0, TabFrames.Size.Y.Offset - 14),
+                Position = UDim2.new(0, 298, 0, 14),
+                Size = UDim2.new(0, 282, 0, 395),
             }, SectionFrame)
 
             local UIListLayout = library:create("UIListLayout", {
@@ -473,23 +475,27 @@ function library.new(library_title, cfg_location)
                     TextSize = 14,
                 }, Border)
 
-                -- Normal text label function
-                function sector.new_label(text, properties)
-                    properties = properties or {}
+                -- Normal text label element
+                function sector.new_label(label_text)
                     Border.Size = Border.Size + UDim2.new(0, 0, 0, 20)
                     
                     local Label = library:create("TextLabel", {
+                        Name = "Label",
                         BackgroundTransparency = 1,
                         Size = UDim2.new(1, 0, 0, 20),
                         Font = Enum.Font.Ubuntu,
-                        Text = text,
-                        TextColor3 = properties.TextColor3 or Color3.fromRGB(200, 200, 200),
-                        TextSize = properties.TextSize or 14,
-                        TextXAlignment = properties.TextXAlignment or Enum.TextXAlignment.Left,
-                        TextYAlignment = properties.TextYAlignment or Enum.TextYAlignment.Center,
+                        Text = label_text,
+                        TextColor3 = Color3.fromRGB(150, 150, 150),
+                        TextSize = 14,
+                        TextXAlignment = Enum.TextXAlignment.Left,
                     }, Container)
                     
-                    return Label
+                    local label_obj = {}
+                    function label_obj:set_text(new_text)
+                        Label.Text = new_text
+                    end
+                    
+                    return label_obj
                 end
 
                 function sector.create_line(thickness)
@@ -498,7 +504,7 @@ function library.new(library_title, cfg_location)
                     local LineFrame = library:create("Frame", {
                         Name = "LineFrame",
                         BackgroundTransparency = 1,
-                        Size = UDim2.new(0, isMobile and (Border.Size.X.Offset - 20) or 250, 0, thickness * 3),
+                        Size = UDim2.new(0, 250, 0, thickness * 3),
                     }, Container)
                     local Line = library:create("Frame", {
                         Name = "Line",
@@ -624,7 +630,7 @@ function library.new(library_title, cfg_location)
                                 Name = "Keybind",
                                 AnchorPoint = Vector2.new(1, 0),
                                 BackgroundTransparency = 1,
-                                Position = UDim2.new(0, isMobile and 220 or 265, 0, 0),
+                                Position = UDim2.new(0, 265, 0, 0),
                                 Size = UDim2.new(0, 56, 0, 20),
                                 Font = Enum.Font.Ubuntu,
                                 Text = "[ NONE ]",
@@ -840,7 +846,7 @@ function library.new(library_title, cfg_location)
                                 AnchorPoint = Vector2.new(1, 0.5),
                                 BackgroundColor3 = Color3.fromRGB(255, 28, 28),
                                 BorderColor3 = Color3.fromRGB(0, 0, 0),
-                                Position = UDim2.new(0, isMobile and 220 or 265, 0.5, 0),
+                                Position = UDim2.new(0, 265, 0.5, 0),
                                 Size = UDim2.new(0, 35, 0, 11),
                                 AutoButtonColor = false,
                                 Text = "",
@@ -1111,7 +1117,7 @@ function library.new(library_title, cfg_location)
                             BackgroundColor3 = Color3.fromRGB(25, 25, 25),
                             BorderColor3 = Color3.fromRGB(0, 0, 0),
                             Position = UDim2.new(0, 9, 0, 20),
-                            Size = UDim2.new(0, isMobile and (Border.Size.X.Offset - 20) or 260, 0, 20),
+                            Size = UDim2.new(0, 260, 0, 20),
                             AutoButtonColor = false,
                             Text = "",
                         }, Dropdown)
@@ -1120,7 +1126,7 @@ function library.new(library_title, cfg_location)
                             Name = "DropdownButtonText",
                             BackgroundTransparency = 1,
                             Position = UDim2.new(0, 6, 0, 0),
-                            Size = UDim2.new(0, isMobile and (DropdownButton.Size.X.Offset - 12) or 250, 1, 0),
+                            Size = UDim2.new(0, 250, 1, 0),
                             Font = Enum.Font.Ubuntu,
                             Text = value.Dropdown,
                             TextColor3 = Color3.fromRGB(150, 150, 150),
@@ -1130,7 +1136,7 @@ function library.new(library_title, cfg_location)
 
                         local ImageLabel = library:create("ImageLabel", {
                             BackgroundTransparency = 1,
-                            Position = UDim2.new(0, isMobile and (DropdownButton.Size.X.Offset - 15) or 245, 0, 8),
+                            Position = UDim2.new(0, 245, 0, 8),
                             Size = UDim2.new(0, 6, 0, 4),
                             Image = "rbxassetid://6724771531",
                         }, DropdownButton)
@@ -1153,7 +1159,7 @@ function library.new(library_title, cfg_location)
                             BackgroundColor3 = Color3.fromRGB(25, 25, 25),
                             BorderColor3 = Color3.fromRGB(0, 0, 0),
                             Position = UDim2.new(0, 9, 0, 41),
-                            Size = UDim2.new(0, isMobile and (Border.Size.X.Offset - 20) or 260, 0, math.min(#data.options * 20, 80)),
+                            Size = UDim2.new(0, 260, 0, math.min(#data.options * 20, 80)),
                             CanvasSize = UDim2.new(0, 0, 0, #data.options * 20),
                             ScrollBarThickness = 2,
                             TopImage = "rbxasset://textures/ui/Scroll/scroll-middle.png",
@@ -1235,7 +1241,7 @@ function library.new(library_title, cfg_location)
                                 Name = "ButtonText",
                                 BackgroundTransparency = 1,
                                 Position = UDim2.new(0, 8, 0, 0),
-                                Size = UDim2.new(0, isMobile and (DropdownScroll.Size.X.Offset - 16) or 245, 1, 0),
+                                Size = UDim2.new(0, 245, 1, 0),
                                 Font = Enum.Font.Ubuntu,
                                 Text = v,
                                 TextColor3 = Color3.fromRGB(150, 150, 150),
@@ -1318,10 +1324,10 @@ function library.new(library_title, cfg_location)
                             BackgroundColor3 = Color3.fromRGB(25, 25, 25),
                             BorderColor3 = Color3.fromRGB(0, 0, 0),
                             Position = UDim2.new(0, 9, 0, 20),
-                            Size = UDim2.new(0, isMobile and (Border.Size.X.Offset - 20) or 260, 0, 10),
+                            Size = UDim2.new(0, 260, 0, 10),
                             AutoButtonColor = false,
                             Text = "",
-                            Active = true,
+                            Active = true, -- Enable touch events
                         }, Slider)
 
                         local SliderFrame = library:create("Frame", {
@@ -1368,6 +1374,7 @@ function library.new(library_title, cfg_location)
                             end
                         end)
                         
+                        -- Simple touch/mouse handling that works for both
                         SliderButton.InputBegan:Connect(function(input)
                             if input.UserInputType == Enum.UserInputType.Touch or 
                                input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -1375,12 +1382,12 @@ function library.new(library_title, cfg_location)
                                 local function update()
                                     local x
                                     if input.UserInputType == Enum.UserInputType.Touch then
-                                        x = math.clamp(input.Position.X - SliderButton.AbsolutePosition.X, 0, SliderButton.AbsoluteSize.X)
+                                        x = math.clamp(input.Position.X - SliderButton.AbsolutePosition.X, 0, 260)
                                     else
-                                        x = math.clamp(mouse.X - SliderButton.AbsolutePosition.X, 0, SliderButton.AbsoluteSize.X)
+                                        x = math.clamp(mouse.X - SliderButton.AbsolutePosition.X, 0, 260)
                                     end
-                                    SliderFrame.Size = UDim2.new(x/SliderButton.AbsoluteSize.X, 0, 1, 0)
-                                    local val = math.floor(((max - min) / SliderButton.AbsoluteSize.X * x) + min)
+                                    SliderFrame.Size = UDim2.new(x/260, 0, 1, 0)
+                                    local val = math.floor(((max - min) / 260 * x) + min)
                                     if val ~= value.Slider then
                                         SliderValue.Text = val
                                         value.Slider = val
@@ -1445,7 +1452,7 @@ function library.new(library_title, cfg_location)
                             BackgroundColor3 = Color3.fromRGB(25, 25, 25),
                             BorderColor3 = Color3.fromRGB(0, 0, 0),
                             Position = UDim2.new(0.5, 0, 0.5, 0),
-                            Size = UDim2.new(0, isMobile and (Border.Size.X.Offset - 40) or 215, 0, 20),
+                            Size = UDim2.new(0, 215, 0, 20),
                             AutoButtonColor = false,
                             Font = Enum.Font.Ubuntu,
                             Text = text,
@@ -1494,7 +1501,7 @@ function library.new(library_title, cfg_location)
                             BackgroundColor3 = Color3.fromRGB(25, 25, 25),
                             BorderColor3 = Color3.fromRGB(0, 0, 0),
                             Position = UDim2.new(0.5, 0, 0.5, 0),
-                            Size = UDim2.new(0, isMobile and (Border.Size.X.Offset - 40) or 215, 0, 20),
+                            Size = UDim2.new(0, 215, 0, 20),
                             Font = Enum.Font.Ubuntu,
                             Text = value.Text,
                             TextColor3 = Color3.fromRGB(150, 150, 150),
